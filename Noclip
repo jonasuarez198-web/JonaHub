@@ -1,0 +1,61 @@
+-- JONA NOCLIP MINI (Delta)
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local lp = Players.LocalPlayer
+local char
+
+local enabled = false
+local UI_SCALE = 0.7 -- 0.5 mini | 0.7 normal chico | 1 grande
+
+local function load()
+	char = lp.Character or lp.CharacterAdded:Wait()
+end
+
+load()
+lp.CharacterAdded:Connect(load)
+
+-- GUI
+local gui = Instance.new("ScreenGui", game.CoreGui)
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0,180*UI_SCALE,0,80*UI_SCALE)
+frame.Position = UDim2.new(.4,0,.7,0)
+frame.BackgroundColor3 = Color3.fromRGB(0,0,0)
+frame.Active = true
+frame.Draggable = true
+Instance.new("UICorner", frame)
+
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1,0,0.4,0)
+title.BackgroundTransparency = 1
+title.Text = "NOCLIP OFF"
+title.TextColor3 = Color3.new(1,1,1)
+title.Font = Enum.Font.GothamBold
+title.TextScaled = true
+
+local toggle = Instance.new("TextButton", frame)
+toggle.Size = UDim2.new(.8,0,.35,0)
+toggle.Position = UDim2.new(.1,0,.5,0)
+toggle.Text = "ON / OFF"
+toggle.BackgroundColor3 = Color3.fromRGB(40,40,40)
+toggle.TextColor3 = Color3.new(1,1,1)
+toggle.TextScaled = true
+Instance.new("UICorner", toggle)
+
+toggle.MouseButton1Click:Connect(function()
+	enabled = not enabled
+	title.Text = enabled and "NOCLIP ON" or "NOCLIP OFF"
+end)
+
+-- NOCLIP LOGIC
+RunService.Stepped:Connect(function()
+	if enabled and char then
+		for _,v in pairs(char:GetDescendants()) do
+			if v:IsA("BasePart") then
+				v.CanCollide = false
+			end
+		end
+	end
+end)
