@@ -1,0 +1,213 @@
+-- JONA HUB MINI (Speed + Hitbox + InfJump + Noclip)
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+
+local lp = Players.LocalPlayer
+local char, hum, hrp
+
+local SPEED = 1
+local HITBOX = 5
+
+local speedOn = false
+local hbOn = false
+local jumpOn = false
+local noclipOn = false
+
+local adorn = {}
+
+local function load()
+	char = lp.Character or lp.CharacterAdded:Wait()
+	hum = char:WaitForChild("Humanoid")
+	hrp = char:WaitForChild("HumanoidRootPart")
+end
+
+load()
+lp.CharacterAdded:Connect(load)
+
+-- GUI
+local gui = Instance.new("ScreenGui", game.CoreGui)
+
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.new(0,240,0,260)
+main.Position = UDim2.new(.35,0,.25,0)
+main.BackgroundColor3 = Color3.fromRGB(0,0,0)
+main.Active = true
+main.Draggable = true
+Instance.new("UICorner", main).CornerRadius = UDim.new(0,12)
+
+local stroke = Instance.new("UIStroke", main)
+stroke.Color = Color3.fromRGB(0,120,255)
+stroke.Thickness = 2
+
+local title = Instance.new("TextLabel", main)
+title.Size = UDim2.new(1,0,0,35)
+title.BackgroundTransparency = 1
+title.Text = "JONA HUB"
+title.TextColor3 = Color3.new(1,1,1)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 18
+
+local function row(txt,y,box)
+	local f = Instance.new("Frame", main)
+	f.Size = UDim2.new(1,-20,0,45)
+	f.Position = UDim2.new(0,10,0,y)
+	f.BackgroundColor3 = Color3.fromRGB(25,25,25)
+	Instance.new("UICorner", f)
+
+	local b = Instance.new("TextButton", f)
+	b.Size = UDim2.new(.45,0,1,0)
+	b.Text = txt.." OFF"
+	b.TextColor3 = Color3.new(1,1,1)
+	b.BackgroundTransparency = 1
+
+	local tbox
+	if box then
+		tbox = Instance.new("TextBox", f)
+		tbox.Size = UDim2.new(.35,0,.7,0)
+		tbox.Position = UDim2.new(.6,0,.15,0)
+		tbox.BackgroundColor3 = Color3.fromRGB(40,40,40)
+		tbox.TextColor3 = Color3.new(1,1,1)
+		Instance.new("UICorner", tbox)
+	end
+	return b,tbox
+end
+
+local speedBtn,speedBox = row("Speed",40,true)
+speedBox.Text = "1"
+
+local hbBtn,hbBox = row("Hitbox",90,true)
+hbBox.Text = "5"
+
+local jumpBtn = row("InfJump",140,false)
+local noclipBtn = row("Noclip",190,false)
+
+-- MINIMIZE
+local min = Instance.new("TextButton", main)
+min.Size = UDim2.new(0,22,0,22)
+min.Position = UDim2.new(1,-28,1,-28)
+min.BackgroundColor3 = Color3.fromRGB(255,0,0)
+min.Text = ""
+Instance.new("UICorner", min)
+
+local bubble = Instance.new("TextButton", gui)
+bubble.Size = UDim2.new(0,50,0,50)
+bubble.BackgroundColor3 = Color3.fromRGB(0,0,0)
+bubble.Text = "J"
+bubble.TextColor3 = Color3.new(1,1,1)
+bubble.Font = Enum.Font.GothamBold
+bubble.TextSize = 22
+bubble.Visible = false
+bubble.Active = true
+bubble.Draggable = true
+Instance.new("UICorner", bubble).CornerRadius = UDim.new(0,12)
+
+local bstroke = Instance.new("UIStroke", bubble)
+bstroke.Color = Color3.fromRGB(0,120,255)
+bstroke.Thickness = 2
+
+min.MouseButton1Click:Connect(function()
+	main.Visible = false
+	bubble.Visible = true
+end)
+
+bubble.MouseButton1Click:Connect(function()
+	main.Visible = true
+	bubble.Visible = false
+end)
+
+-- SPEED
+speedBtn.MouseButton1Click:Connect(function()
+	speedOn = not speedOn
+	speedBtn.Text = speedOn and "Speed ON" or "Speed OFF"
+end)
+
+speedBox.FocusLost:Connect(function()
+	local v = tonumber(speedBox.Text)
+	if v then SPEED = math.clamp(v,1,150) end
+end)
+
+RunService.Heartbeat:Connect(function()
+	if speedOn and hum and hrp then
+		local d = hum.MoveDirection
+		if d.Magnitude > 0 then
+			hrp.CFrame = hrp.CFrame + Vector3.new(d.X,0,d.Z).Unit * SPEED * 0.08
+		end
+	end
+end)
+
+-- INF JUMP
+jumpBtn.MouseButton1Click:Connect(function()
+	jumpOn = not jumpOn
+	jumpBtn.Text = jumpOn and "InfJump ON" or "InfJump OFF"
+end)
+
+UIS.JumpRequest:Connect(function()
+	if jumpOn and hum then
+		hum:ChangeState(Enum.HumanoidStateType.Jumping)
+	end
+end)
+
+-- NOCLIP
+noclipBtn.MouseButton1Click:Connect(function()
+	noclipOn = not noclipOn
+	noclipBtn.Text = noclipOn and "Noclip ON" or "Noclip OFF"
+end)
+
+RunService.Stepped:Connect(function()
+	if noclipOn and char then
+		for _,v in pairs(char:GetDescendants()) do
+			if v:IsA("BasePart") then
+				v.CanCollide = false
+			end
+		end
+	end
+end)
+
+-- HITBOX
+hbBtn.MouseButton1Click:Connect(function()
+	hbOn = not hbOn
+	hbBtn.Text = hbOn and "Hitbox ON" or "Hitbox OFF"
+end)
+
+hbBox.FocusLost:Connect(function()
+	local v = tonumber(hbBox.Text)
+	if v then HITBOX = math.clamp(v,5,80) end
+end)
+
+local function outline(p)
+	if adorn[p] then return end
+	local a = Instance.new("BoxHandleAdornment")
+	a.Adornee = p
+	a.AlwaysOnTop = true
+	a.Color3 = Color3.fromRGB(180,180,180)
+	a.Transparency = .4
+	a.Parent = p
+	adorn[p] = a
+end
+
+local function clear(p)
+	if adorn[p] then adorn[p]:Destroy() adorn[p]=nil end
+end
+
+RunService.Heartbeat:Connect(function()
+	for _,plr in pairs(Players:GetPlayers()) do
+		if plr~=lp and plr.Character then
+			local r = plr.Character:FindFirstChild("HumanoidRootPart")
+			if r then
+				if hbOn then
+					r.Size = Vector3.new(HITBOX,HITBOX,HITBOX)
+					r.Transparency = .85
+					r.CanCollide = false
+					outline(r)
+					adorn[r].Size = r.Size
+				else
+					r.Size = Vector3.new(2,2,1)
+					r.Transparency = 1
+					clear(r)
+				end
+			end
+		end
+	end
+end)
